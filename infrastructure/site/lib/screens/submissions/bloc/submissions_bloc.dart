@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:admin/api_repository.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -14,7 +15,7 @@ class SubmissionsBloc extends Bloc<SubmissionsEvent, SubmissionsState> {
 
   final ApiRepository repository;
 
-  SubmissionsBloc({required this.repository}) : super(SubmissionsInitial()) {
+  SubmissionsBloc({required this.repository}) : super(SubmissionsState()) {
     on<SubmissionsLoadEvent>(_onLoad);
   }
 
@@ -22,19 +23,48 @@ class SubmissionsBloc extends Bloc<SubmissionsEvent, SubmissionsState> {
     SubmissionsLoadEvent event,
     Emitter<SubmissionsState> emit,
   ) async {
-    emit(SubmissionsLoading());
+    emit(state.copyWith(
+      submissionsStatus: SubmissionsStatus.loading,
+      surveyStatus: SubmissionsStatus.loading,
+    ));
 
-    Submissions data;
+    Submissions submissions;
     try {
-      data = await repository.fetchSubmissions(
+      submissions = await repository.fetchSubmissions(
         starttime: event.starttime,
         endtime: event.endtime,
         minscore: event.minscore,
         maxscore: event.maxscore,
       );
-      emit(SubmissionsLoaded(data));
+      emit(state.copyWith(
+        submissionsStatus: SubmissionsStatus.success,
+        submissions: submissions,
+      ));
     } catch (_) {
-      emit(SubmissionsLoadFailed());
+      emit(state.copyWith(submissionsStatus: SubmissionsStatus.failure));
+    }
+
+    Survey survey;
+    try {
+      // fetch survey from API
+      survey = await repository.fetchSurvey();
+      emit(state.copyWith(
+        surveyStatus: SubmissionsStatus.success,
+        survey: survey,
+      ));
+    } catch (_) {
+      // fetch local survey instead
+      try {
+        survey = await repository.fetchLocalSurvey();
+        emit(state.copyWith(
+          surveyStatus: SubmissionsStatus.success,
+          survey: survey,
+          localSurveyFetched: true,
+        ));
+      } catch (_) {
+        // failed to get any survey!
+        emit(state.copyWith(surveyStatus: SubmissionsStatus.failure));
+      }
     }
   }
 }

@@ -23,34 +23,84 @@ class SubmissionsView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [submissionsFromState(state)],
+          children: [
+            submissionsFromState(
+              state: state,
+              context: context,
+            )
+          ],
         ),
       ),
     );
   }
 
-  static Widget submissionsFromState(SubmissionsState state) {
-    if (state is SubmissionsInitial || state is SubmissionsLoading) {
-      return Expanded(child: Center(child: CircularProgressIndicator()));
-    } else if (state is SubmissionsLoaded) {
-      return Expanded(
-        child: Center(
-          child: messageFromSubmissions(state.submissions),
-        ),
-      );
-    } else if (state is SubmissionsLoadFailed) {
-      return Expanded(
-        child: Center(
-          child: Text('Error fetching submissions'),
-        ),
-      );
-    } else {
-      assert(false);
-      return ErrorWidget('Error State');
+  static Widget submissionsFromState({
+    required SubmissionsState state,
+    required BuildContext context,
+  }) {
+    switch (state.surveyStatus) {
+      case SubmissionsStatus.initial:
+      case SubmissionsStatus.loading:
+        return Expanded(child: Center(child: CircularProgressIndicator()));
+      case SubmissionsStatus.failure:
+        SnackBar snackBar = SnackBar(
+          content: Text(
+            'Error fetching survey! '
+            'Some information about the survey responses will be mising.',
+          ),
+        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        });
+        break;
+      case SubmissionsStatus.success:
+        if (state.localSurveyFetched) {
+          SnackBar snackBar = SnackBar(
+            content: Text(
+              'Error fetching survey from API! '
+              'A local copy of the survey is being used instead.',
+            ),
+          );
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          });
+        }
+    }
+
+    switch (state.submissionsStatus) {
+      case SubmissionsStatus.initial:
+      case SubmissionsStatus.loading:
+        return Expanded(child: Center(child: CircularProgressIndicator()));
+      case SubmissionsStatus.success:
+        if (state.submissions == null) {
+          return Expanded(
+            child: Center(
+              child: Text(
+                'Error fetching submissions: '
+                'submissions object is null',
+              ),
+            ),
+          );
+        } else {
+          return Expanded(
+            child: Center(
+              child: messageFromSubmissions(state.submissions!, state.survey),
+            ),
+          );
+        }
+      case SubmissionsStatus.failure:
+        return Expanded(
+          child: Center(
+            child: Text('Error fetching submissions'),
+          ),
+        );
     }
   }
 
-  static Widget messageFromSubmissions(Submissions submissions) {
+  static Widget messageFromSubmissions(
+    Submissions submissions,
+    Survey? survey,
+  ) {
     BuiltList<Submission>? list = submissions.list;
     if (list == null) {
       return Text('No list of submissions.');
@@ -62,7 +112,7 @@ class SubmissionsView extends StatelessWidget {
       child: ListView(
         children: [
           for (final submission in submissions.list!)
-            SubmissionListTile(submission),
+            SubmissionListTile(submission: submission, survey: survey),
         ],
       ),
     );

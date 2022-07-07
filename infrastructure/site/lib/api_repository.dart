@@ -1,10 +1,12 @@
 import 'dart:async' show Future;
+import 'dart:io' show File;
 import 'package:logging/logging.dart';
 import 'package:moralpainapi/moralpainapi.dart';
 
 class SubmissionsFetchFailure implements Exception {
   const SubmissionsFetchFailure([
-    this.message = 'An unknown exception occurred.',
+    this.message = 'An unknown exception occurred '
+        'while fetching submissions from the API.',
   ]);
 
   final String message;
@@ -17,7 +19,17 @@ class SubmissionsFetchFailure implements Exception {
 
 class SurveyFetchFailure implements Exception {
   const SurveyFetchFailure([
-    this.message = 'An unknown exception occurred.',
+    this.message = 'An unknown exception occurred '
+        'while fetching survey from the API.',
+  ]);
+
+  final String message;
+}
+
+class LocalSurveyFetchFailure implements Exception {
+  const LocalSurveyFetchFailure([
+    this.message = 'An unknown exception occurred '
+        'while fetching the local survey.',
   ]);
 
   final String message;
@@ -54,6 +66,8 @@ class ApiRepository {
       ))
           .data!;
     } catch (err) {
+      log.warning(err.toString(), err);
+      print(err);
       throw (SubmissionsFetchFailure(err.toString()));
     }
   }
@@ -64,7 +78,21 @@ class ApiRepository {
     try {
       return (await uapi.getSurvey()).data!;
     } catch (err) {
+      log.warning(err.toString(), err);
+      print(err);
       throw (SurveyFetchFailure(err.toString()));
+    }
+  }
+
+  Future<Survey> fetchLocalSurvey() async {
+    try {
+      File file = File('../../../assets/json/survey.json');
+      String json = await file.readAsString();
+      return standardSerializers.fromJson(Survey.serializer, json)!;
+    } catch (err) {
+      log.warning(err.toString(), err);
+      print(err);
+      throw (LocalSurveyFetchFailure(err.toString()));
     }
   }
 }

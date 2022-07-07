@@ -4,9 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:moralpainapi/moralpainapi.dart';
 
 class SubmissionListTile extends StatelessWidget {
-  const SubmissionListTile(this.submission, {Key? key}) : super(key: key);
+  const SubmissionListTile({
+    required this.submission,
+    this.survey,
+    Key? key,
+  }) : super(key: key);
 
   final Submission submission;
+  final Survey? survey;
 
   @override
   Widget build(BuildContext context) {
@@ -65,10 +70,28 @@ class SubmissionListTile extends StatelessWidget {
     } else {
       text += submission.selections![0];
       for (int i = 1; i < submission.selections!.length; i++) {
-        text += ', ${submission.selections![i]}';
+        text += ', ${_decodeSurveySelection(submission.selections![i])}';
       }
     }
 
     return Text(text);
+  }
+
+  String _decodeSurveySelection(String selection) {
+    if (survey != null && survey!.sections != null) {
+      // Search in the Survey for the given selection code
+      for (SurveySection? section in survey!.sections!) {
+        if (section != null && section.options != null) {
+          for (SurveyOption? option in section.options!) {
+            if (option != null && option.id == selection) {
+              return option.description ?? selection;
+            }
+          }
+        }
+      }
+    }
+
+    // If we're at this point, then the Survey doesn't contain the given id.
+    return selection;
   }
 }

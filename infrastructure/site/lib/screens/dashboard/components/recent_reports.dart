@@ -90,8 +90,8 @@ void _onRecentReportDataRowTapped(BuildContext context, RecentReport fileInfo) {
       fullscreenDialog: true,
       builder: (context) => SubmissionsRoute(
         repository: ApiRepository(
-          basePathOverride: 'http://127.0.0.1:4010',
-        ),
+            //basePathOverride: 'http://127.0.0.1:4010',
+            ),
       ),
     ),
   );

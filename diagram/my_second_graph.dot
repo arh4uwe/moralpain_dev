@@ -1,0 +1,5 @@
+digraph {
+    abc [fontname="Times New Roman"];
+    abc -> def [dir = none];
+    def -> abc;
+}

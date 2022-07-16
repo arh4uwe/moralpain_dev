@@ -1,0 +1,30 @@
+digraph Page1 {
+node [shape=rect];
+    subgraph "Local Machine" {
+        View [shape = tab];
+        Bloc;
+        "API Repository";
+        "API Client";
+        subgraph "Bloc States" {
+            node [shape = oval, style = dashed];
+            edge [style = dotted, arrowhead = vee];
+            Initial;
+            "In Progress";
+            Failure;
+            Initial -> "In Progress";
+            "In Progress" -> Failure;
+        }
+    }
+    subgraph AWS {
+        "API Gateway";
+        Lambda;
+        S3;
+    }
+    View -> Bloc [label = "Load Event"];
+    Bloc -> Initial [style = dashed, arrowhead = none];
+    Bloc -> "API Repository" [label = params];
+    "API Repository" -> "API Client" [label = params];
+    "API Client" -> "API Repository" [label = error];
+    "API Repository" -> Bloc [label = error];
+    Failure -> View;
+}

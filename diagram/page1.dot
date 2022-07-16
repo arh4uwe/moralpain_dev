@@ -1,0 +1,19 @@
+digraph Page1 {
+node [shape=rect];
+    subgraph "Local Machine" {
+        View [shape = tab];
+        Bloc;
+        "API Repository";
+        "API Client";
+        subgraph "Bloc States" {
+            Initial [shape = oval, style = dashed];
+        }
+    }
+    subgraph AWS {
+        "API Gateway";
+        Lambda;
+        S3;
+    }
+    Bloc -> Initial [style = dashed, arrowhead = none];
+    Initial -> View;
+}

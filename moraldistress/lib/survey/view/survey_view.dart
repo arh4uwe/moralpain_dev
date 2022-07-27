@@ -11,39 +11,7 @@ import 'package:expansion_tile_card/expansion_tile_card.dart';
 
 import '../survey.dart';
 
-class SurveyView extends StatefulWidget {
-  @override
-  SurveyViewState createState() => SurveyViewState();
-}
-
-class SurveyViewState extends State<SurveyView> {
-  final controller = ScrollController();
-  bool _show = true;
-
-  @override
-  void initState() {
-    super.initState();
-    controller.addListener(scrollHandler);
-  }
-
-  @override
-  void dispose() {
-    controller.removeListener(() {});
-    super.dispose();
-  }
-
-  void showFloationButton() {
-    setState(() {
-      _show = true;
-    });
-  }
-
-  void hideFloationButton() {
-    setState(() {
-      _show = false;
-    });
-  }
-
+class SurveyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<SurveyBloc, SurveyState>(
@@ -201,7 +169,6 @@ class SurveyViewState extends State<SurveyView> {
     } else if (state is SurveyLoaded) {
       return Expanded(
           child: ListView(
-              controller: controller,
               scrollDirection: Axis.vertical,
               shrinkWrap: true,
               children: state.survey.sections!
@@ -225,17 +192,6 @@ class SurveyViewState extends State<SurveyView> {
         //action: SnackBarAction(label: 'UNDO', onPressed: scaffold.hideCurrentSnackBar),
       ),
     );
-  }
-
-  void scrollHandler() {
-    print(controller.position.pixels);
-    print(controller.position.maxScrollExtent);
-
-    if (controller.position.pixels == controller.position.maxScrollExtent) {
-      showFloationButton();
-    } else {
-      hideFloationButton();
-    }
   }
 
   Widget cardForSection(SurveySection section) {
